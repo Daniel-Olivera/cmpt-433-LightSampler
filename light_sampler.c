@@ -3,6 +3,10 @@
 
 int main()
 {
-    printf("Hello World!");
+    while (true) {
+    int reading = getVoltageReading(POT_FILE);
+    printf("Value %5d\n", reading);
+    }
     return 0;
+
 }

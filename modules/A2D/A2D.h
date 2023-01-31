@@ -2,4 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-int getVoltage0Reading(void);
+#define POT_FILE 0
+#define LIGHT_SENS_FILE 1
+
+int getVoltageReading(int);
