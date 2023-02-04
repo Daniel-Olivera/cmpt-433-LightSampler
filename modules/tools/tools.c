@@ -41,20 +41,20 @@ int getRandomZeroOrOne(void)
     return rand() % 2;
 }
 
-// static void runCommand(char* command)
-// {
-//     FILE *pipe = popen(command, "r");
+void runCommand(char* command)
+{
+    FILE *pipe = popen(command, "r");
 
-//     char buffer[1024];
-//     while (!feof(pipe) && !ferror(pipe)) {
-//         if (fgets(buffer, sizeof(buffer), pipe) == NULL)
-//             break;
-//     }
+    char buffer[1024];
+    while (!feof(pipe) && !ferror(pipe)) {
+        if (fgets(buffer, sizeof(buffer), pipe) == NULL)
+            break;
+    }
 
-//     int exitCode = WEXITSTATUS(pclose(pipe));
-//     if (exitCode != 0){
-//         perror("Unable to execute command: ");
-//         printf("    %s\n", command);
-//         printf("    exit code: %d\n", exitCode);
-//     }
-// }
+    int exitCode = WEXITSTATUS(pclose(pipe));
+    if (exitCode != 0){
+        perror("Unable to execute command: ");
+        printf("    %s\n", command);
+        printf("    exit code: %d\n", exitCode);
+    }
+}
