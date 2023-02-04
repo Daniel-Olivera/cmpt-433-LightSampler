@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "../tools/tools.h"
 
-#define POT_FILE 0
-#define LIGHT_SENS_FILE 1
-
-int getVoltageReading(int);
+void A2D_init(void);
+void A2D_cleanup(void);
+void * A2D_readLightSensor(void*);
+void * A2D_readPotMeter(void*);

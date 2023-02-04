@@ -10,17 +10,14 @@
 int main()
 {
     segDisplayInit();
+    A2D_init();
 
-    pthread_t thread_id;
-    int *i = malloc(sizeof(*i));
-    *i = 45;
-    pthread_create(&thread_id, NULL, showNum, i);
+    sleepForMs(10000);
 
-    while (true) {
-    int reading = getVoltageReading(POT_FILE);
-    printf("Value %5d\n", reading);
-    }
-    pthread_join(thread_id, NULL);
+    A2D_cleanup();
+    SegDisplay_cleanup();
+
+    
     return 0;
 
 }

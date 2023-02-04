@@ -7,6 +7,8 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include <dirent.h>
+#include <pthread.h>
+#include <stdbool.h>
 
 #define GPIO_DIR "/sys/class/gpio/gpio"
 #define SEG_LEFT_VAL "/sys/class/gpio/gpio61/value"
@@ -48,38 +50,20 @@ SegDisplayDigit displayDigits[] =
     [9].top_half_val = 0x8e, [9].bot_half_val = 0x90, //            9
 };
 
+pthread_t displayThread;
+static bool shutdown = false;
+
 static int openI2CBus(char* bus, int address);
 static void writeI2cReg(int i2cFileDesc, unsigned char regAddr, unsigned char value);
 static FILE* openFile(char* fileName);
 static void writeToFile(char* fileName, char input[]);
 static void exportGpioPin(char value[]);
 
-// Initialize the display
-void segDisplayInit(void)
+
+void SegDisplay_cleanup(void)
 {
-    //exports the pins for the 14-seg display
-    //iff not already exported
-    exportGpioPin("61");
-    exportGpioPin("44");
-
-    //set the directions to output and turn them both on
-    writeToFile(SEG_LEFT_DIRECTION, "out");
-    writeToFile(SEG_RIGHT_DIRECTION, "out");
-    writeToFile(SEG_LEFT_VAL, ON);
-    writeToFile(SEG_RIGHT_VAL, ON);
-
-    //configure the pins for i2c mode
-    runCommand("config-pin P9_18 i2c");
-    runCommand("config-pin P9_17 i2c");
-
-    //open the bus
-    int i2cFileDesc = openI2CBus(I2CDRV_LINUX_BUS1, I2C_DEVICE_ADDRESS);
-
-    //set direction of the ports on the I2C extender to be output
-    writeI2cReg(i2cFileDesc, REG_DIRA, 0x00);
-    writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
-
-    close(i2cFileDesc);
+    shutdown = true;
+    pthread_join(displayThread, NULL);
 }
 
 // Opens the I2C bus so that we can write to the register
@@ -188,22 +172,57 @@ void * showNum(void *input)
         secondDigit = 9;
     }
 
-    while(1){
-    setLeftDigitOnOrOff(OFF);
-    setRightDigitOnOrOff(OFF);
+    while(!shutdown){
+        setLeftDigitOnOrOff(OFF);
+        setRightDigitOnOrOff(OFF);
 
-    setDisplayValue(firstDigit);
+        setDisplayValue(firstDigit);
 
-    setLeftDigitOnOrOff(ON);
+        setLeftDigitOnOrOff(ON);
 
-    sleepForMs(5);
+        sleepForMs(5);
 
-    setLeftDigitOnOrOff(OFF);
-    setRightDigitOnOrOff(OFF);
+        setLeftDigitOnOrOff(OFF);
+        setRightDigitOnOrOff(OFF);
 
-    setDisplayValue(secondDigit);
-    
-    setRightDigitOnOrOff(ON);
-    sleepForMs(5);
+        setDisplayValue(secondDigit);
+        
+        setRightDigitOnOrOff(ON);
+        sleepForMs(5);
     }
+
+    free(input);
+    return NULL;
+}
+
+// Initialize the display
+void segDisplayInit(void)
+{
+
+    int *i = malloc(sizeof(*i));
+    *i = 1;
+    pthread_create(&displayThread, NULL, showNum, i);
+    //exports the pins for the 14-seg display
+    //iff not already exported
+    exportGpioPin("61");
+    exportGpioPin("44");
+
+    //set the directions to output and turn them both on
+    writeToFile(SEG_LEFT_DIRECTION, "out");
+    writeToFile(SEG_RIGHT_DIRECTION, "out");
+    writeToFile(SEG_LEFT_VAL, ON);
+    writeToFile(SEG_RIGHT_VAL, ON);
+
+    //configure the pins for i2c mode
+    runCommand("config-pin P9_18 i2c");
+    runCommand("config-pin P9_17 i2c");
+
+    //open the bus
+    int i2cFileDesc = openI2CBus(I2CDRV_LINUX_BUS1, I2C_DEVICE_ADDRESS);
+
+    //set direction of the ports on the I2C extender to be output
+    writeI2cReg(i2cFileDesc, REG_DIRA, 0x00);
+    writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
+
+    close(i2cFileDesc);
 }

@@ -1,4 +1,5 @@
 
+void SegDisplay_cleanup(void);
 void segDisplayInit(void);
 void setDisplayValue(int);
 void setLeftDigitOnOrOff(char mode[]);
