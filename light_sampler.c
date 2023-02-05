@@ -14,8 +14,10 @@ int main()
 
     sleepForMs(10000);
 
-    A2D_cleanup();
     SegDisplay_cleanup();
+    A2D_cleanup();
+
+    printf("total number of light samples taken: %d", A2D_getNumLightSamples());
 
     
     return 0;

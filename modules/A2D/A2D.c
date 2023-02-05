@@ -6,7 +6,9 @@
 #define A2D_VOLTAGE_REF_V 1.8
 #define A2D_MAX_READING 
 
-pthread_t lightSensorThread;
+static pthread_t lightSensorThread;
+static pthread_t potMeterThread;
+static int numLightSamples = 0;
 static bool shutdown = false;
 
 static int getVoltageReading(int);
@@ -14,12 +16,14 @@ static int getVoltageReading(int);
 void A2D_init(void)
 {
     pthread_create(&lightSensorThread, NULL, A2D_readLightSensor, NULL);
+    pthread_create(&potMeterThread, NULL, A2D_readPotMeter, NULL);
 }
 
 void A2D_cleanup(void)
 {
     shutdown = true;
     pthread_join(lightSensorThread, NULL);
+    pthread_join(potMeterThread, NULL);
 }
 
 
@@ -27,7 +31,11 @@ void * A2D_readLightSensor(void *nothing)
 {
     while (!shutdown) {
         int reading = getVoltageReading(LIGHT_SENS_FILE);
+        /*
+            TODO:  
+        */
         printf("Value %5d\n", reading);
+        numLightSamples += 1;
         sleepForMs(1);
     }
     return NULL;
@@ -36,11 +44,19 @@ void * A2D_readLightSensor(void *nothing)
 void * A2D_readPotMeter(void* nothing)
 {
     while (!shutdown) {
-        int reading = getVoltageReading(POT_FILE);
-        printf("Value %5d\n", reading);
+        // int reading = getVoltageReading(POT_FILE);
+        /*
+            TODO: SET BUFFER SIZE
+        */
+        // printf("Value %5d\n", reading);
         sleepForMs(1000);
     }
     return NULL;
+}
+
+int A2D_getNumLightSamples(void)
+{
+    return numLightSamples;
 }
 
 //From Brian's Guide on the A2D

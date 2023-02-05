@@ -1,48 +1,76 @@
-#include <stdbool.h>
+#include "CircularBuffer.h"
 
-#define SIZE_OF_BUFFER 10
+struct Cbuff {
+    int * buffer;
+    int head;
+    int tail;
+    int max;
+    bool full;
+};
 
-static int bufferLength = 0;
-
-static int head = 0;
-static int tail = 0;
-static bool isFull = false;
-
-
-
-void push(int item)
+Cbuff_t Cbuff_init(int* buffer, int size)
 {
-    if(isBufferFull()){
-        //cannot add new elem
-    }
-    else{
-        buffer[head] = item;
-        bufferLength++;
-        head = (head+1) % SIZE_OF_BUFFER;
-        if(head == tail){
-            isFull = true;
+    Cbuff_t cbuf = malloc(sizeof(Cbuff));
+
+    cbuf->buffer = buffer;
+    cbuf->max = size;
+    Cbuff_reset(cbuf);
+
+    return cbuf;
+}
+
+void Cbuff_free(Cbuff_t buf)
+{
+    assert(buf);
+    free(buf);
+}
+
+void Cbuff_reset(Cbuff_t buf)
+{
+    buf->head = 0;
+    buf->tail = 0;
+    buf->full = false;
+}
+
+void Cbuff_put(Cbuff_t buf, int value)
+{
+    
+}
+
+int Cbuff_get(Cbuff_t buf, int * data)
+{
+
+}
+
+
+bool Cbuff_isEmpty(Cbuff_t buf)
+{
+    return (!buf->full && (buf->head == buf->tail));
+}
+
+bool Cbuff_isFull(Cbuff_t buf)
+{
+    return buf->full;
+}
+
+int Cbuff_capacity(Cbuff_t buf)
+{
+    return buf->max;
+}
+
+int Cbuff_size(Cbuff_t buf)
+{
+    int size = buf->max;
+
+    if(!buf->full){
+        if(buf->head >= buf->tail){
+            size = (buf->head - buf->tail);
+        }
+        else{
+            size = (buf->max + buf->head - buf->tail);
         }
     }
+
+    return size;
 }
 
-void pop(void)
-{
-    if(isEmpty()){
-        //no element to read
-    }
-    else{
-        int data = buffer[tail];
-        tail = (tail+1) % SIZE_OF_BUFFER;
-        isFull = false;
-    }
-}
-
-bool isBufferFull(void)
-{
-    return isFull;
-}
-
-bool isEmpty(void)
-{
-    return (head == tail) && (isFull == false);
-}
