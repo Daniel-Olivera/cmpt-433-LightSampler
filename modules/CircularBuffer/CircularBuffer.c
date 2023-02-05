@@ -8,6 +8,9 @@ struct Cbuff {
     bool full;
 };
 
+static void advance_pointer(Cbuff_t buf);
+static void retreat_pointer(Cbuff_t buf);
+
 Cbuff_t Cbuff_init(int* buffer, int size)
 {
     Cbuff_t cbuf = malloc(sizeof(Cbuff));
@@ -34,12 +37,22 @@ void Cbuff_reset(Cbuff_t buf)
 
 void Cbuff_put(Cbuff_t buf, int value)
 {
-    
+    buf->buffer[buf->head] = value;
+    advance_pointer(buf);
 }
 
 int Cbuff_get(Cbuff_t buf, int * data)
 {
+    int result = -1;
 
+    if(!Cbuff_isEmpty(buf)){
+        *data = buf->buffer[buf->tail];
+        retreat_pointer(buf);
+
+        result = 0;
+    }
+
+    return result;
 }
 
 
@@ -74,3 +87,25 @@ int Cbuff_size(Cbuff_t buf)
     return size;
 }
 
+static void advance_pointer(Cbuff_t buf)
+{
+    if(buf->full){
+        if(++(buf->tail) == buf->max){
+            buf->tail = 0;
+        }
+    }
+
+    if(++(buf->head) == buf->max){
+        buf->head = 0;
+    }
+
+    buf->full = (buf->head == buf->tail);
+}
+
+static void retreat_pointer(Cbuff_t buf)
+{
+    buf->full = false;
+    if(++(buf->tail) == buf->max){
+        buf->tail = 0;
+    }
+}
