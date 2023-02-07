@@ -182,17 +182,21 @@ static void printData(void)
 
     int* array = Cbuff_getHistory(buf);
 
-    short ds = Cbuff_size(buf);
+    short numElems = Cbuff_size(buf);
 
-    if(ds >= 200){
-        for(int i = 0; i < ds; i+=200){
+    if(numElems >= 200){
+        for(int i = 0; i < numElems; i+=200){
             double result = (double) array[i];
             double voltage = (result/A2D_MAX_READING) * A2D_VOLTAGE_REF_V;
             printf("%.3f\t", voltage);
         }
     }
-    free(array);
+    else{
+        double result = (double) array[0];
+        double voltage = (result/A2D_MAX_READING) * A2D_VOLTAGE_REF_V;
+        printf("%.3f\t", voltage);
+    }
 
     printf("\n");
-
+    free(array);
 }
