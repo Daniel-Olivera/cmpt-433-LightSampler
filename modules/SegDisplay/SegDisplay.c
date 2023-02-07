@@ -51,6 +51,7 @@ SegDisplayDigit displayDigits[] =
 };
 
 pthread_t displayThread;
+int numToShow = 0;
 static bool shutdown = false;
 
 static int openI2CBus(char* bus, int address);
@@ -58,13 +59,6 @@ static void writeI2cReg(int i2cFileDesc, unsigned char regAddr, unsigned char va
 static FILE* openFile(char* fileName);
 static void writeToFile(char* fileName, char input[]);
 static void exportGpioPin(char value[]);
-
-
-void SegDisplay_cleanup(void)
-{
-    shutdown = true;
-    pthread_join(displayThread, NULL);
-}
 
 // Opens the I2C bus so that we can write to the register
 static int openI2CBus(char* bus, int address)
@@ -161,18 +155,17 @@ static void exportGpioPin(char value[])
     closedir(dir);
 }
 
-void * showNum(void *input)
+void * showNum(void* nothing)
 {
-    int num = *((int *) input);
-    int firstDigit = num / 10;
-    int secondDigit = num % 10;
-
-    if (num > 99){
-        firstDigit = 9;
-        secondDigit = 9;
-    }
-
     while(!shutdown){
+        int firstDigit = numToShow / 10;
+        int secondDigit = numToShow % 10;
+
+        if (numToShow > 99){
+            firstDigit = 9;
+            secondDigit = 9;
+        }
+
         setLeftDigitOnOrOff(OFF);
         setRightDigitOnOrOff(OFF);
 
@@ -190,18 +183,20 @@ void * showNum(void *input)
         setRightDigitOnOrOff(ON);
         sleepForMs(5);
     }
-
-    free(input);
+    
+    setLeftDigitOnOrOff(OFF);
+    setRightDigitOnOrOff(OFF);
     return NULL;
+}
+
+void SegDisplay_setNum(int input)
+{
+    numToShow = input;
 }
 
 // Initialize the display
 void segDisplayInit(void)
 {
-
-    int *i = malloc(sizeof(*i));
-    *i = 1;
-    pthread_create(&displayThread, NULL, showNum, i);
     //exports the pins for the 14-seg display
     //iff not already exported
     exportGpioPin("61");
@@ -225,4 +220,12 @@ void segDisplayInit(void)
     writeI2cReg(i2cFileDesc, REG_DIRB, 0x00);
 
     close(i2cFileDesc);
+
+    pthread_create(&displayThread, NULL, showNum, NULL);
+}
+
+void SegDisplay_cleanup(void)
+{
+    shutdown = true;
+    pthread_join(displayThread, NULL);
 }

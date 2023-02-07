@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdlib.h>
 
 //Implemented using the guide from:
 //https://embeddedartistry.com/blog/2017/05/17/creating-a-circular-buffer-in-c-and-c/
@@ -22,7 +23,7 @@ void Cbuff_put(Cbuff_t buf, int value);
 
 //get data from the buffer
 //returns 0 on success, -1 if the buffer is empty
-int Cbuff_get(Cbuff_t buf, int * data);
+int Cbuff_get(Cbuff_t buf);
 
 //returns true if the buffer is empty
 bool Cbuff_isEmpty(Cbuff_t buf);
@@ -35,3 +36,9 @@ int Cbuff_capacity(Cbuff_t buf);
 
 //returns the number of elements in the buffer
 int Cbuff_size(Cbuff_t buf);
+
+//change the size of the buffer
+void Cbuff_set_size(Cbuff_t buf, int newSize);
+
+//get a copy of the buffer
+int* Cbuff_getHistory(Cbuff_t buf);

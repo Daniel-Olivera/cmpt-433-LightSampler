@@ -1,4 +1,6 @@
 #include "CircularBuffer.h"
+#include <string.h>
+#include <stdio.h>
 
 struct Cbuff {
     int * buffer;
@@ -10,6 +12,7 @@ struct Cbuff {
 
 static void advance_pointer(Cbuff_t buf);
 static void retreat_pointer(Cbuff_t buf);
+static int min(int a, int b);
 
 Cbuff_t Cbuff_init(int* buffer, int size)
 {
@@ -24,7 +27,6 @@ Cbuff_t Cbuff_init(int* buffer, int size)
 
 void Cbuff_free(Cbuff_t buf)
 {
-    assert(buf);
     free(buf);
 }
 
@@ -41,15 +43,13 @@ void Cbuff_put(Cbuff_t buf, int value)
     advance_pointer(buf);
 }
 
-int Cbuff_get(Cbuff_t buf, int * data)
+int Cbuff_get(Cbuff_t buf)
 {
     int result = -1;
 
     if(!Cbuff_isEmpty(buf)){
-        *data = buf->buffer[buf->tail];
+        result = buf->buffer[buf->tail];
         retreat_pointer(buf);
-
-        result = 0;
     }
 
     return result;
@@ -108,4 +108,36 @@ static void retreat_pointer(Cbuff_t buf)
     if(++(buf->tail) == buf->max){
         buf->tail = 0;
     }
+}
+
+void Cbuff_set_size(Cbuff_t buf, int newSize)
+{
+    
+    //allocate new buffer of new size
+    int * newBuffer = malloc((newSize + 1) * sizeof(int));
+
+    //get min size between the 2 buffers
+    int minSize = min((newSize+1) * sizeof(int), Cbuff_size(buf) * sizeof(int));
+
+    //copy old buffer into the new one
+    memcpy(newBuffer, buf->buffer, minSize);
+
+    //set the buffer to be the new buffer
+    buf->buffer = newBuffer;
+    buf->max = newSize;
+}
+
+int* Cbuff_getHistory(Cbuff_t buf)
+{
+    int * result = malloc(Cbuff_size(buf) * sizeof(int));
+    memcpy(result, buf->buffer, Cbuff_size(buf) * sizeof(int));
+    return result;
+}
+
+static int min(int a, int b)
+{
+    if(a < b)
+        return a;
+    else   
+        return b;
 }
