@@ -4,45 +4,30 @@
 #include "modules/SegDisplay/SegDisplay.h"
 #include <pthread.h>
 #include "modules/CircularBuffer/CircularBuffer.h"
+#include "modules/UDP/UDP.h"
 #include <stdlib.h>
 
 #define ON "1"
 #define OFF "0"
 
+bool shutdown_app;
+
 int main()
 {
-    segDisplayInit();
+    shutdown_app = false;
+    SegDisplay_Init();
     A2D_init();
+    UDP_init();
 
-    sleepForMs(20000);
-
-    printf("total number of light samples taken: %d\n", A2D_getNumLightSamples());
+    while(!shutdown_app){
+        sleepForMs(1);
+    }
 
     SegDisplay_cleanup();
     A2D_cleanup();
+    UDP_cleanup();
 
-
-
-    // int * buffer = malloc(10 * sizeof(int));
-
-    // Cbuff_t buf = Cbuff_init(buffer, 10);
-
-    // for(int i = 0; i < 10; i++){
-    //     Cbuff_put(buf, i);
-    // }
-
-    // sleepForMs(1000);
-
-    // Cbuff_set_size(buf, 5);
-
-    // while(1){    
-    //     printf("data = %d\n", Cbuff_get(buf));
-    //     sleepForMs(500);
-    // }
-
-    // free(buffer);
-    // Cbuff_free(buf);
-
+    printf("Shutting down.\n");
     return 0;
 
 }

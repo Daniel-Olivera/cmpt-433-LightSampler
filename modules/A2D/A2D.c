@@ -15,7 +15,6 @@ static pthread_t lightSensorThread;
 static pthread_t potMeterThread;
 static pthread_mutex_t lock;
 static int numLightSamples = 0;
-static bool shutdown = false;
 Cbuff_t buf;
 static int potValue = 0;
 static double currentAvg = 0;
@@ -39,7 +38,6 @@ void A2D_init(void)
 
 void A2D_cleanup(void)
 {
-    shutdown = true;
     pthread_join(lightSensorThread, NULL);
     pthread_join(potMeterThread, NULL);
     Cbuff_free(buf);
@@ -49,7 +47,7 @@ void A2D_cleanup(void)
 
 void * A2D_readLightSensor(void* nothing)
 {
-    while (!shutdown) {
+    while (!shutdown_app) {
         int reading = getVoltageReading(LIGHT_SENS_FILE);   
         pthread_mutex_lock(&lock);
         Cbuff_put(buf, reading);
@@ -66,7 +64,7 @@ void * A2D_readLightSensor(void* nothing)
 
 void * A2D_readPotMeter(void* nothing)
 {
-    while (!shutdown) {
+    while (!shutdown_app) {
         A2D_checkForDips(currentAvg);
         // printf("%d\n", numDips);
         int reading = getVoltageReading(POT_FILE);
@@ -87,8 +85,6 @@ void * A2D_readPotMeter(void* nothing)
 
 int A2D_getNumLightSamples(void)
 {
-    // printf("buffer size was: %d\n", Cbuff_capacity(buf));
-    // printf("avg light reading was: %f\n", A2D_getAverageReading());
     return numLightSamples;
 }
 
@@ -172,9 +168,9 @@ int getVoltageReading(int fileNum)
 static void printData(void)
 {
     Period_getStatisticsAndClear(PERIOD_EVENT_SAMPLE_LIGHT, &periodTimer);
-    printf("Samples/s = %d\t", A2D_getNumLightSamples());
+    printf("Samples/s = %d\t", periodTimer.numSamples);
     printf("Pot Value = %d\t", potValue);
-    printf("History size = %d\t", Cbuff_size(buf));
+    printf("History size = %d\t", A2D_getHistoryLength());
     printf("avg = %.3f\t", currentAvg);
     printf("dips = %d\t", numDips);
     printf("Sampling[%.3f, %.3f] avg %.3f/%d\n", periodTimer.minPeriodInMs, periodTimer.maxPeriodInMs,
@@ -188,7 +184,8 @@ static void printData(void)
         for(int i = 0; i < numElems; i+=200){
             double result = (double) array[i];
             double voltage = (result/A2D_MAX_READING) * A2D_VOLTAGE_REF_V;
-            printf("%.3f\t", voltage);
+            if(voltage > 0)
+                printf("%.3f\t", voltage);
         }
     }
     else{
@@ -199,4 +196,31 @@ static void printData(void)
 
     printf("\n");
     free(array);
+}
+
+int* A2D_getHistory(void)
+{
+    return Cbuff_getHistory(buf);
+}
+
+int A2D_getPotValue(void)
+{
+    return potValue;
+}
+
+int A2D_getHistoryLength(void)
+{
+    return Cbuff_size(buf);
+}
+
+double A2D_convertToVoltage(int n)
+{
+    double input = (double) n;
+    double voltage = (input/A2D_MAX_READING) * A2D_VOLTAGE_REF_V;
+    return voltage;
+}
+
+int A2D_getDips(void)
+{
+    return numDips;
 }

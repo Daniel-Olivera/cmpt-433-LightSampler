@@ -1,19 +1,7 @@
-// Utility functions such as sleep and get current time
-// Also random number generators for different uses in the main loop
+// Utility functions such as sleep and runCommand
 
 #include "tools.h"
 #include <stdio.h>
-
-long long getTimeInMs(void)
-{
-    struct timespec spec;
-    clock_gettime(CLOCK_REALTIME, &spec);
-    long long seconds = spec.tv_sec;
-    long long nanoSeconds = spec.tv_nsec;
-    long long milliSeconds = seconds * 1000 + nanoSeconds / 1000000;
-
-    return milliSeconds;
-}
 
 void sleepForMs (long long delayInMs)
 {
@@ -26,19 +14,6 @@ void sleepForMs (long long delayInMs)
 
     struct timespec reqDelay = {seconds, nanoseconds};
     nanosleep(&reqDelay, (struct timespec *) NULL);
-}
-
-//gets random number in a range of 0.5s to 3s
-//from https://www.geeksforgeeks.org/generating-random-number-range-c/
-long long getRandomTimeInMs(void)
-{
-    srand(time(0));
-    return (rand() % (3000 + 1 - 500)) + 500;
-}
-
-int getRandomZeroOrOne(void)
-{
-    return rand() % 2;
 }
 
 void runCommand(char* command)

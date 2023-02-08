@@ -10,3 +10,8 @@ double A2D_getAverageReading(void);
 double A2D_calculateAvg(void);
 void * A2D_readLightSensor(void*);
 void * A2D_readPotMeter(void*);
+int* A2D_getHistory(void);
+int A2D_getPotValue(void);
+int A2D_getHistoryLength(void);
+double A2D_convertToVoltage(int n);
+int A2D_getDips(void);

@@ -50,15 +50,18 @@ SegDisplayDigit displayDigits[] =
     [9].top_half_val = 0x8e, [9].bot_half_val = 0x90, //            9
 };
 
-pthread_t displayThread;
-int numToShow = 0;
-static bool shutdown = false;
+static pthread_t displayThread;
+static int numToShow = 0;
 
+//prototypes
 static int openI2CBus(char* bus, int address);
 static void writeI2cReg(int i2cFileDesc, unsigned char regAddr, unsigned char value);
 static FILE* openFile(char* fileName);
 static void writeToFile(char* fileName, char input[]);
 static void exportGpioPin(char value[]);
+static void setDisplayValue(int value);
+static void setLeftDigitOnOrOff(char mode[]);
+static void setRightDigitOnOrOff(char mode[]);
 
 // Opens the I2C bus so that we can write to the register
 static int openI2CBus(char* bus, int address)
@@ -76,7 +79,7 @@ static int openI2CBus(char* bus, int address)
 }
 
 // Sets the display value on the 14-seg display
-void setDisplayValue(int value)
+static void setDisplayValue(int value)
 {
     int i2cFileDesc = openI2CBus(I2CDRV_LINUX_BUS1, I2C_DEVICE_ADDRESS);
 
@@ -86,12 +89,12 @@ void setDisplayValue(int value)
     close(i2cFileDesc);
 }
 
-void setLeftDigitOnOrOff(char mode[])
+static void setLeftDigitOnOrOff(char mode[])
 {
     writeToFile(SEG_LEFT_VAL, mode);
 }
 
-void setRightDigitOnOrOff(char mode[])
+static void setRightDigitOnOrOff(char mode[])
 {
     writeToFile(SEG_RIGHT_VAL, mode);
 }
@@ -157,7 +160,7 @@ static void exportGpioPin(char value[])
 
 void * showNum(void* nothing)
 {
-    while(!shutdown){
+    while(!shutdown_app){
         int firstDigit = numToShow / 10;
         int secondDigit = numToShow % 10;
 
@@ -195,7 +198,7 @@ void SegDisplay_setNum(int input)
 }
 
 // Initialize the display
-void segDisplayInit(void)
+void SegDisplay_Init(void)
 {
     //exports the pins for the 14-seg display
     //iff not already exported
@@ -226,6 +229,5 @@ void segDisplayInit(void)
 
 void SegDisplay_cleanup(void)
 {
-    shutdown = true;
     pthread_join(displayThread, NULL);
 }
