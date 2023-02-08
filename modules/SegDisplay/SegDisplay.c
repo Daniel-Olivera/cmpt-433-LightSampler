@@ -229,5 +229,7 @@ void SegDisplay_Init(void)
 
 void SegDisplay_cleanup(void)
 {
+    setLeftDigitOnOrOff(OFF);
+    setRightDigitOnOrOff(OFF);
     pthread_join(displayThread, NULL);
 }
